@@ -1,0 +1,80 @@
+%!TEX root=regrid.tex
+\usepackage{hyperref}
+\usepackage{multicol}
+
+
+\usepackage{fontspec}
+\setmainfont[
+  Ligatures=TeX,
+  SmallCapsFeatures={Renderer=Basic}
+]{Calendas Plus}
+
+\usepackage{graphicx}
+
+\usepackage[dvipsnames]{xcolor}
+
+
+\definecolor{ucol}{rgb}{.6,0,0}
+\definecolor{webgreen}{rgb}{0,.5,0}
+\definecolor{halfgray}{gray}{0.55}
+\hypersetup{%
+    colorlinks=true, linktocpage=true, pdfstartpage=3, pdfstartview=FitV,%
+    % uncomment the following line if you want to have black links (e.g., for printing)
+    %colorlinks=false, linktocpage=false, pdfborder={0 0 0}, pdfstartpage=3, pdfstartview=FitV,%
+    breaklinks=true, pdfpagemode=UseNone, pageanchor=true, pdfpagemode=UseOutlines,%
+    plainpages=false, bookmarksnumbered, bookmarksopen=true, bookmarksopenlevel=1,%
+    hypertexnames=true, pdfhighlight=/O,%hyperfootnotes=true,%nesting=true,%frenchlinks,%
+    urlcolor=ucol, linkcolor=RoyalBlue, citecolor=webgreen, %pagecolor=RoyalBlue,%
+    %urlcolor=Black, linkcolor=Black, citecolor=Black, %pagecolor=Black,%
+    pdftitle={Research Statement},%
+    pdfauthor={Richard Shaw},%
+    pdfsubject={},%
+    pdfkeywords={},%
+    pdfcreator={pdfLaTeX},%
+    pdfproducer={LaTeX}%
+}
+
+\usepackage{letterspace}
+
+
+\newcommand{\lssecstyle}[1]{\raggedright\scshape\textls[80]{\MakeLowercase{\large\noindent #1}}}%
+
+\setsecheadstyle{\lssecstyle}
+\setbeforesecskip{-1.3\onelineskip}
+\setaftersecskip{0.7\onelineskip}
+
+\setsubsecheadstyle{\sethangfrom{\noindent ##1}\raggedright\itshape}
+\setbeforesubsecskip{-1.2\onelineskip}
+\setaftersubsecskip{0.6\onelineskip}
+
+
+\setlrmarginsandblock{9pc}{*}{1}
+\setulmarginsandblock{3pc}{5pc}{*}
+\setcolsepandrule{1.5pc}{0pt}
+
+\linespread{1.07}
+% \counterwithout{section}{chapter}
+
+% \captionnamefont{\small}\captiontitlefont{\small}
+
+\checkandfixthelayout
+
+\pagestyle{plain}
+
+\renewcommand{\bibsection}{%
+  %\section*{\bibname} \prebibhook}
+  {\hfill\rule{0.8\linewidth}{0.7pt}\hfill} \prebibhook}
+%\setlength{\bibitemsep}{-0.3\parsep}
+\setlength{\bibitemsep}{0pt}
+
+\usepackage{xspace}
+\newcommand{\tcm}{21$\,$cm\xspace}
+\newcommand{\tcite}[1]{[{\color{webgreen}#1}]}
+
+\usepackage[style=numeric,backend=bibtex,maxbibnames=1,doi=false]{biblatex}
+\AtEveryBibitem{\clearfield{title}\clearfield{date}\clearfield{month}}
+\renewcommand{\bibfont}{\normalfont\small}
+\renewbibmacro{in:}{}
+\addbibresource{statement.bib}
+
+\input{mathdef}

@@ -1,0 +1,114 @@
+%!TEX program = lualatex
+\documentclass[oldfontcommands,letter,11pt,oneside,article]{memoir}
+
+\input{preamble}
+
+\begin{document}
+
+\title{Rigidisation Signal to Noise}
+\author{Richard Shaw}
+
+\maketitle
+
+This document comes out of an email discussion about whether the accuracy with
+which we can recover the gains using rigidisation is proportional to the
+dynamic range\footnote{The ratio between the highest and second highest
+eigenvalues.}, or the proportional to the square root. Where the reasoning
+behind the latter argument is essentially that the eigenvalues represent the
+power (or variance) of the gain fluctuations, and so the fluctuations
+themselves are statistically proportional to the square root. This argument is
+not correct however, and this document is the derivation of why, as well as a
+useful description of how the instrument noise controls the dynamic range of
+the solutions.
+
+First let us set up the problem. What we have measured are the visibilities
+during the time when the noise source is on, minus the visibilities when it's
+off. This is
+\begin{equation}
+\label{eq:gain}
+V_{ij} = g_i g_j^* s + N_{ij}
+\end{equation}
+where the noise term $N_{ij} = n_{ij}^\text{on} - n_{ij}^\text{off}$.
+This should mean that the sky signal is completely subtracted, and the only
+contribution is a stochastic noise term, with
+\begin{subequations}
+\begin{align}
+\label{eq:noise_stats}
+\la N_{ij} \ra & = 0 \; , \\
+\la N_{ij} N_{kl}^* \ra & = \delta_{ik} \delta_{jl} \sigma_N^2 \; .
+\end{align}
+\end{subequations}
+
+We are interested in solving for the gain vector in \eqref{eq:gain}, which we
+can do by eigendecomposition of the visibility matrix $V_{ij}$. In the
+noiseless limit, this gives only one non-zero eigenvalue $\lambda_0 = s$, and
+eigenvector $\vx_0 = \vg$ (where we have chosen the normalisation such that
+$\vg$ is unitary). The other eigenvalues $\lambda_j$ are all zero (where $j$
+always indexes $j > 0$), and the eigenvectors $\vx_j$ span the space orthogonal
+to $\vx_0 = \vg$.
+
+To work out the effect of the noise term, we'll treat it as a perturbation to the noiseless system. We'll need to use eigenvector perturbation theory, which is well described on Wikipedia \footnote{\url{http://en.wikipedia.org/wiki/Eigenvalue_perturbation}}, but may be familiar from perturbation theory in undergraduate Quantum Mechanics! The derivation is really straightforward too. Using this, the highest eigenvalue (which is the one we really care about)
+\begin{equation}
+\tilde{\lambda}_0 = s + \vg^\hconj \mN \vg
+\end{equation}
+and the other eigenvalues (which were previously zero) are
+\begin{equation}
+\tilde{\lambda}_j = \vx_j^\hconj \mN \vx_j \; .
+\end{equation}
+
+We also care about the highest eigenvector, which using perturbation theory comes out to be
+\begin{equation}
+\tilde{\vx}_0 = \vg + \frac{1}{s} \sum_j \vx_j ( \vx_j^\hconj \mN \vg ) \; .
+\end{equation}
+We can simplify this somewhat by
+\begin{align}
+\tilde{\vx}_0 & = \vg + \frac{1}{s} \sum_a \vx_a ( \vx_a^\hconj \mN \vg ) - \frac{1}{s} \vg ( \vg^\hconj \mN \vg )\\
+& = \vg + (\mI - \vg\vg^\hconj) \mN \vg
+\end{align}
+where the summation on $a$ is over all eigenvalues including zero, and we've
+used the fact that the full set of eigenvectors $\vx_a$ forms an orthonormal
+basis.
+
+By inspecting these we can see that they all equations we can see that they
+depend on the ratio of the instrumental noise term to the injected signal, and that this suggests that the gain fluctuations are proportional to the dynamic range. To make this concrete we can go through and calculate the statistics of them. Using \eqref{eq:noise_stats} we can show that
+\begin{align}
+\la \tilde{\lambda}_0 \ra & = s \\
+\la \tilde{\lambda}_j \ra & = 0
+\end{align}
+and that the variances of these are
+\begin{align}
+\la \lambda_0^2 \ra - \la \lambda_0 \ra^2 & = \la \vg^\hconj \mN \vg \vg^\hconj \mN^\hconj \ra \\
+& = \sigma_N^2
+\end{align}
+and similarly
+\begin{equation}
+\la \lambda_j^2 \ra = \sigma_N^2 \; .
+\end{equation}
+
+The eigenvector has mean
+\begin{equation}
+\la \tilde{\vx}_0 \ra = \vg \; .
+\end{equation}
+The covariance of the eigenvector is a little more complicated to solve for
+\begin{align}
+\la (\tilde{\vx}_i - \vg) (\tilde{\vx}_j - \vg)\ra_{in} &
+= \frac{1}{s^2} \la (\mI - \vg \vg^\hconj ) \mN \vg \vg^\hconj \mN (\mI - \vg \vg^\hconj ) \ra_{in} \\
+& = \frac{1}{s^2} \sum_{jklm} (\delta_{ij} - g_i g_j^*) (\delta_{mn} - g_m g_n^*) g_k g_l^* \la N_{jk} N_{lm} \ra \; .
+\end{align}
+Performing all the contractions gives the gain vector covariance as
+\begin{equation}
+\la (\tilde{\vx}_i - \vg) (\tilde{\vx}_j - \vg)\ra = \frac{\sigma_N^2}{s^2} (\mI - \vg \vg^\hconj ) \; .
+\end{equation}
+
+Having gone through all this we can say that the expected dynamic range should be something around
+\begin{equation}
+\text{dynamic range} \sim \frac{\la \lambda_j^2 \ra^{1/2}}{\la \lambda_0 \ra^2} = \frac{\sigma_N}{s} \; ,
+\end{equation}
+and thus the gain fluctuations are around
+\begin{equation}
+\delta{g} \sim \text{dynamic range}
+\end{equation}
+
+
+
+\end{document}
