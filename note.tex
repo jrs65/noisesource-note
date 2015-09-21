@@ -21,35 +21,106 @@ not correct however, and this document is the derivation of why, as well as a
 useful description of how the instrument noise controls the dynamic range of
 the solutions.
 
+\section*{Introduction}
+
 First let us set up the problem. What we have measured are the visibilities
 during the time when the noise source is on, minus the visibilities when it's
-off. This is
+off. This should mean that the sky signal is completely subtracted, and the only
+remaining contributions are from the injected signal and a stochastic noise term
 \begin{equation}
 \label{eq:gain}
-V_{ij} = g_i g_j^* s + N_{ij}
+V_{ij} = g_i g_j^* + N_{ij} \; ,
 \end{equation}
-where the noise term $N_{ij} = n_{ij}^\text{on} - n_{ij}^\text{off}$.
-This should mean that the sky signal is completely subtracted, and the only
-contribution is a stochastic noise term, with
+where the noise on each element $N_{ij} = n_{ij}^\text{on} - n_{ij}^\text{off}$. The noise
+term is assumed to be close to Gaussian with
 \begin{subequations}
 \begin{align}
 \label{eq:noise_stats}
 \la N_{ij} \ra & = 0 \; , \\
-\la N_{ij} N_{kl}^* \ra & = \delta_{ik} \delta_{jl} \sigma_N^2 \; .
+\la N_{ij} N_{kl}^* \ra & = \calN_{(ij)(kl)}\; .
 \end{align}
 \end{subequations}
 
-We are interested in solving for the gain vector in \eqref{eq:gain}, which we
-can do by eigendecomposition of the visibility matrix $V_{ij}$. In the
-noiseless limit, this gives only one non-zero eigenvalue $\lambda_0 = s$, and
-eigenvector $\vx_0 = \vg$ (where we have chosen the normalisation such that
-$\vg$ is unitary). The other eigenvalues $\lambda_j$ are all zero (where $j$
-always indexes $j > 0$), and the eigenvectors $\vx_j$ span the space orthogonal
-to $\vx_0 = \vg$.
-
-To work out the effect of the noise term, we'll treat it as a perturbation to the noiseless system. We'll need to use eigenvector perturbation theory, which is well described on Wikipedia \footnote{\url{http://en.wikipedia.org/wiki/Eigenvalue_perturbation}}, but may be familiar from perturbation theory in undergraduate Quantum Mechanics! The derivation is really straightforward too. Using this, the highest eigenvalue (which is the one we really care about)
+We can use this to construct a likelihood function in the usual way
+$\calL(g) = P(V \vert G) \propto e^{-\chi^2}$, with
 \begin{equation}
-\tilde{\lambda}_0 = s + \vg^\hconj \mN \vg
+    \chi^2 = \sum_{ijkl} (V^*_{ij} - g^*_i g_j) \calN^{-1}_{(ij)(kl)} (V_{kl} - g_k g_l^*) \; .
+\end{equation}
+A good way to proceed would be to find the maximum-likelihood solution $\partial
+\chi^2/\partial{g_i} = 0$, but unfortunately in the general case written above
+there is no simple solution.\footnote{This is the problem of finding a Weighted
+Low Rank Approximation (WLRA), see
+\url{https://www.aaai.org/Papers/ICML/2003/ICML03-094.pdf} for a discussion.}
+Instead lets look at a simpler case with uniform weighting. This is equivalent
+to the noise-covariance being uniform and diagonal
+\begin{equation}
+    \label{eq:uniform_noise}
+\calN_{(ij)(kl)} = \delta_{ik} \delta_{jl} \sigma^2
+\end{equation}
+and after minimising the likelihood leads to the constraint that
+\begin{equation}
+\sum_j V_{ij} g_j = \left(\sum_k g_k g_k^*\right) g_i \; \; ,
+\end{equation}
+or in matrix notation
+\begin{equation}
+    \mV \vg = \lv \vg \rv^2 \vg \; ,
+\end{equation}
+which is solved by an eigenvector of the matrix $\mV$ normalised such that $\lv
+\vg \rv^2$ is equal to the corresponding eigenvalue $\lambda$. The
+maximum-likelihood solution corresponds to picking the vector with the largest
+eigenvalue.
+
+This is the solution for the uniformly weighted case, however, we can make a
+slight relaxation by a simple change of variables. If the noise covariance is of
+a factorisable form
+\begin{equation}
+\calN_{(ij)(kl)} = \delta_{ik} \delta_{jl} \sigma_{ii} \sigma_{jj} \; ,
+\end{equation}
+we can make a change of variables
+\begin{align}
+    \label{eq:gain_transform}
+    V_{ij} & \rightarrow \tilde{V}_{ij} = V_{ij} \sqrt{\frac{\sigma^2}{\sigma_{ii} \sigma_{jj}}} \notag \\
+    g_i &    \rightarrow \tilde{g}_i = g_i \sqrt{\frac{\sigma}{\sigma_{ii}}}
+\end{align}
+to transform the problem into the uniformly weighted case. We have introduced
+the arbitrary factor $\sigma$ just as a label to allow us to keep track of the
+noise terms, yielding the noise covariance given in \eqref{eq:uniform_noise}.
+
+Fortunately this factorisable case is exactly the regime we are in for an
+interferometer with uncorrelated noise (requiring that $T_\text{recv} \gg
+T_\text{sky}$). The variance of any element of the visibility matrix
+\begin{equation}
+    \sigma_{ij}^2 = \frac{T_{\text{sys},i} T_{\text{sys},j}}{\tau \Delta\nu} = \sigma_{ii} \sigma_{jj} \; .
+\end{equation}
+In practice this can be done simply by normalising by the geometric mean of the
+auto correlations. Note that this must be the full auto-correlation before
+differencing (i.e. it should be the `on' time sample).
+
+
+\section*{Perturbation Theory}
+
+We are going to solve for the gain vector in \eqref{eq:gain} by
+eigendecomposition of the visibility matrix $V_{ij}$. As discussed above we have
+assumed that the matrix has been rescaled such that the noise is uniform like
+\eqref{eq:uniform_noise}.
+
+In the noiseless limit ($\sigma^2 \rightarrow 0$), the system has only one
+non-zero eigenvalue $\lambda_0 = g^2$, and eigenvector $\vx_0 = \vghat$, the unit
+vector pointing in the direction of $\vg$ (where we have chosen the
+normalisation used in \eqref{eq:gain}). The other eigenvalues $\lambda_j$ are
+all zero (where $j$ always indexes $j > 0$), and the eigenvectors $\vx_j$ span
+the space orthogonal to $\vx_0 = \vghat$.
+
+To work out the effect of the noise added into the visibility matrix, we'll
+treat it as a perturbation to the noiseless system. We'll denote this matrix
+perturbation $\mN$ which should not be confused with the noise covariance matrix
+$\calN$ used above, $\mN$ is a specific realisation from the noise. We'll need
+to use eigenvector perturbation theory, which is well described on Wikipedia
+\footnote{\url{http://en.wikipedia.org/wiki/Eigenvalue_perturbation}}, but may
+be familiar from perturbation theory in undergraduate Quantum Mechanics! Using
+this, the highest eigenvalue (which is the one we really care about)
+\begin{equation}
+\tilde{\lambda}_0 = g^2 + \vghat^\hconj \mN \vghat
 \end{equation}
 and the other eigenvalues (which were previously zero) are
 \begin{equation}
@@ -58,57 +129,145 @@ and the other eigenvalues (which were previously zero) are
 
 We also care about the highest eigenvector, which using perturbation theory comes out to be
 \begin{equation}
-\tilde{\vx}_0 = \vg + \frac{1}{s} \sum_j \vx_j ( \vx_j^\hconj \mN \vg ) \; .
+\tilde{\vx}_0 = \vghat + \frac{1}{g^2} \sum_j \vx_j ( \vx_j^\hconj \mN \vghat ) \; .
 \end{equation}
 We can simplify this somewhat by
 \begin{align}
-\tilde{\vx}_0 & = \vg + \frac{1}{s} \sum_a \vx_a ( \vx_a^\hconj \mN \vg ) - \frac{1}{s} \vg ( \vg^\hconj \mN \vg )\\
-& = \vg + (\mI - \vg\vg^\hconj) \mN \vg
+\tilde{\vx}_0 & = \vghat + \frac{1}{g^2} \sum_a \vx_a ( \vx_a^\hconj \mN \vghat ) - \frac{1}{g^2} \vghat ( \vghat^\hconj \mN \vghat )\\
+& = \vghat + \frac{1}{g^2} (\mI - \vghat\vghat^\hconj) \mN \vghat
 \end{align}
 where the summation on $a$ is over all eigenvalues including zero, and we've
 used the fact that the full set of eigenvectors $\vx_a$ forms an orthonormal
 basis.
 
 By inspecting these we can see that they all equations we can see that they
-depend on the ratio of the instrumental noise term to the injected signal, and that this suggests that the gain fluctuations are proportional to the dynamic range. To make this concrete we can go through and calculate the statistics of them. Using \eqref{eq:noise_stats} we can show that
+depend on the ratio of the instrumental noise term to the injected signal, and
+that this suggests that the gain fluctuations are proportional to the dynamic
+range. To make this concrete we can go through and calculate the statistics of
+them. Using \eqref{eq:noise_stats} we can show that
 \begin{align}
-\la \tilde{\lambda}_0 \ra & = s \\
+\la \tilde{\lambda}_0 \ra & = g^2 \\
 \la \tilde{\lambda}_j \ra & = 0
 \end{align}
 and that the variances of these are
 \begin{align}
-\la \lambda_0^2 \ra - \la \lambda_0 \ra^2 & = \la \vg^\hconj \mN \vg \vg^\hconj \mN^\hconj \ra \\
-& = \sigma_N^2
+\la \lambda_0^2 \ra - \la \lambda_0 \ra^2 & = \la \vghat^\hconj \mN \vghat \vghat^\hconj \mN^\hconj \vghat \ra \\
+& = \sigma^2
 \end{align}
 and similarly
 \begin{equation}
-\la \lambda_j^2 \ra = \sigma_N^2 \; .
+\la \lambda_j^2 \ra = \sigma^2 \; .
+\end{equation}
+In the work we've been doing so far, we've been defining the dynamic range as
+the ratio between the first and second largest eigenvalues. Unfortunately this
+is a difficult quantity to analytically express\footnote{Though it probably can
+be done with random matrix theory:
+\url{https://en.wikipedia.org/wiki/Random_matrix\#Spectral_theory_of_random_matrices}},
+so we are going to use a slightly modified definition of the largest eigenvalue
+divided by the standard deviation of the rest. Using the above, this is
+\begin{equation}
+    \label{eq:dynamic_range}
+    r = \frac{\la \tilde{\lambda}_0 \ra}{\la \tilde{\lambda}_j^2 \ra^{1/2}} = \frac{g^2}{\sigma} \; .
 \end{equation}
 
-The eigenvector has mean
-\begin{equation}
-\la \tilde{\vx}_0 \ra = \vg \; .
-\end{equation}
-The covariance of the eigenvector is a little more complicated to solve for
+We are not particularly interested in what the actual eigenvector is, we are
+more interested in the gain vector $\tilde{\vg}$ we would infer from the
+solution
 \begin{align}
-\la (\tilde{\vx}_i - \vg) (\tilde{\vx}_j - \vg)\ra_{in} &
-= \frac{1}{s^2} \la (\mI - \vg \vg^\hconj ) \mN \vg \vg^\hconj \mN (\mI - \vg \vg^\hconj ) \ra_{in} \\
-& = \frac{1}{s^2} \sum_{jklm} (\delta_{ij} - g_i g_j^*) (\delta_{mn} - g_m g_n^*) g_k g_l^* \la N_{jk} N_{lm} \ra \; .
+    \tilde{\vg} & = \tilde{\lambda}_0^{1/2} \tilde{\vx}_0 \\
+                & = \vg + \frac{1}{g} \biggl(\mI - \frac{1}{2} \vghat \vghat^\hconj \biggl) \mN \vghat \; ,
+\end{align}
+at first order in $\mN$. Clearly the expectation of $\tilde{\vg}$ is
+\begin{equation}
+\la \tilde{\vg} \ra = \vg \; ,
+\end{equation}
+and thus the estimate is unbiased. The covariance of the gain vector is a little more complicated
+\begin{align}
+\la (\tilde{\vg} - \vg) (\tilde{\vg} - \vg)^\hconj \ra_{ij} &
+= \frac{1}{g^2} \la (\mI - \vghat \vghat^\hconj /2 ) \mN \vghat \vghat^\hconj \mN (\mI - \vghat \vghat^\hconj / 2) \ra_{ij} \\
+& = \frac{1}{g^2} \sum_{klmn} (\delta_{ik} - \hat{g}_i \hat{g}_k^*) (\delta_{nj} - \hat{g}_n \hat{g}_j^*) \hat{g}_l \hat{g}_m^* \la N_{kl} N_{nm} \ra \; .
 \end{align}
 Performing all the contractions gives the gain vector covariance as
 \begin{equation}
-\la (\tilde{\vx}_i - \vg) (\tilde{\vx}_j - \vg)\ra = \frac{\sigma_N^2}{s^2} (\mI - \vg \vg^\hconj ) \; .
+    \label{eq:gain_covariance}
+\la (\tilde{\vg}_i - \vg) (\tilde{\vg}_j - \vg)^\hconj\ra = \frac{\sigma^2}{g^2} \biggl(\mI - \frac{3}{4}\vghat \vghat^\hconj \biggr) \; .
 \end{equation}
 
-Having gone through all this we can say that the expected dynamic range should be something around
-\begin{equation}
-\text{dynamic range} \sim \frac{\la \lambda_j^2 \ra^{1/2}}{\la \lambda_0 \ra^2} = \frac{\sigma_N}{s} \; ,
-\end{equation}
-and thus the gain fluctuations are around
-\begin{equation}
-\delta{g} \sim \text{dynamic range}
-\end{equation}
+\section*{Putting it all together}
 
+Let's go back and try and relate what we've done so far back to the actual noise
+source calibration procedure. First let's write down a fairly general model for
+what the gain vector is
+\begin{equation}
+    g_i = s(t)^{1/2} \gamma_i(t) \alpha_i \; .
+\end{equation}
+In this $s(t)$ is the power of the injected signal, which we combined into the
+gain vector in \eqref{eq:gain}. The quantity $\gamma_i(t)$ is the time variable
+part of the gain for each input (the quantity we are trying to solve for), which
+we assume to be $\sim 1$. Finally $\alpha_i$ is a static gain representing the
+transfer function of the injected signal. The illumination that Juan has been
+measuring is basically the square of this number. We assume one element of the
+gain vector to be the directly digitized noise source, we'll denote it as $g_s =
+s(t)^{1/2}$.
+
+First we need to rescale our gain vectors to be the uniformly weighted case.
+Using the transformation in \eqref{eq:gain_transform}, the rescaled gain vector
+becomes
+\begin{equation}
+    \label{eq:gain_rescaled}
+    \tilde{g}_i = \sqrt{\frac{\sigma s(t)}{\sigma_{ii}}} \gamma_i(t) \alpha_i \; .
+\end{equation}
+Due to a series of unfortunate notational choices, this $\tilde{g}$ which was
+also used in the first section is actually the $g$ referred to in the second
+section. Still let's ignore that for the moment and plough on. Putting this into the definition of dynamic range \eqref{eq:dynamic_range}, gives
+\begin{equation}
+    r = \frac{g^2}{\sigma} = \frac{s(t)}{\sigma_s} + \sum_{i \ne s} \frac{s(t)}{\sigma_{ii}} \lv \gamma_i(t) \rv^2 \lv \alpha_i \rv^2 \; .
+\end{equation}
+We can make this clearer by noting that for noise satisying the radiometer equation
+\begin{equation}
+    \sigma_{ii} = \frac{1}{\sqrt{\tau \Delta\nu}} (T_{\text{recv},i} + T_i)
+\end{equation}
+where $T_i$ is the temperature of the noise source seen by feed $i$ and is effectively
+\begin{equation}
+    T_i = \lv \gamma_i(t) \rv^2 \lv \alpha_i \rv^2 s(t) \; .
+\end{equation}
+Using these definitions we can define the fractional signal level of the noise source seen by feed $i$ as
+\begin{equation}
+    f_i = \frac{T_i}{T_{\text{recv},i} + T_i}
+\end{equation}
+allowing us to rewrite the dynamic range as
+\begin{equation}
+    r = \sqrt{\tau \Delta\nu} \left[ 1 + \sum_{i \ne s} f_i \right]
+\end{equation}
+For the current CHIME setup with $\Delta\nu = 0.4\,\mathrm{MHz}$ and $\tau =
+20\,\mathrm{s}$, giving $s(t) / \sigma_s \sim 3000$, such that the dynamic range
+$r$ should be greater than $35\,\mathrm{dB}$ (from the first term in the
+parentheses). The contribution of the other inputs to the solution is suppressed
+by factors of $\lv \alpha_i \rv^2 / \sigma_{ii}$. In the worst case these
+contribute nothing (giving the $35\,\mathrm{dB}$ lower bound). In the best case
+the noise source is bright compared to $T_\text{recv}$ for each feed, and thus
+each contributes with the maximum amount it could from the radiometer equation
+$f_i \sim 1$, giving $r \sim N_\text{feed} \sqrt{\tau \Delta\nu}$. For
+Pathfinder parameters this gives $58\,\mathrm{dB}$, though we should note this
+situation is probably undesirable as it means for each feed $T_\text{sys}$ is
+dominated by the noise source.
+
+Finally let's have a look at the expected error on the solution for each gain.
+Ignoring the small correlated part of \eqref{eq:gain_covariance}, we have that
+\begin{equation}
+    \delta{g}_i \sim \frac{\sigma}{g} \; ,
+\end{equation}
+inserting the rescaled gain \eqref{eq:gain_rescaled} and rearranging for $\gamma_i$ we find
+\begin{equation}
+    \delta{\gamma}_i \sim \sqrt{\frac{\sigma_{ii}}{\alpha_i s(t)}} \sqrt{\frac{1}{r}} \; .
+\end{equation}
+Rewriting in the same way as above, we find that
+\begin{equation}
+    \delta{\gamma}_i \sim \frac{1}{\sqrt{\tau \Delta\nu}} \left[f_i \left(1 + \sum_{i \ne s} f_i \right) \right]^{-1/2} \; .
+\end{equation}
+As an example, if all the feeds were illuminated such that the injected signal
+was $10 \%$ of the total power (i.e. $f_i = 0.1$), the error on the gain would
+be $\sim 0.02 \%$
 
 
 \end{document}
